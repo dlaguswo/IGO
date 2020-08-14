@@ -1,0 +1,174 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+	PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+	"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+	
+<mapper namespace="mapper.guest">
+
+	<insert id="insertData" parameterType="com.exe.tmi.guest.dto.GuestDTO">
+		insert into guest (email,name,pwd,tel,hostcheck,point,coupon,created) values (#{email},#{name},#{pwd},#{tel},0,0,'1,2,3',sysdate)
+	</insert>
+	
+	<select id="selectOverlappedID" parameterType="String" resultType="String">
+		select decode(count(*), 1, 'true', 0, 'false') from guest where email = #{email}
+	</select>
+	
+	<update id="emailCheck" parameterType="String">
+		update guest set emailcheck = 1 where email = #{email}
+	</update>
+	
+	<select id="login" parameterType="guestDTO" resultType="guestDTO">
+		select * from guest where email = #{email} and pwd = #{pwd}
+	</select>
+	
+	<update id="newpassword" parameterType="guestDTO">
+		update guest set pwd = #{pwd} where email = #{email}
+	</update>
+	
+	<select id="selectKeyword" resultType="com.exe.tmi.main.dto.MainDTO" parameterType="map">
+	<![CDATA[
+		select DISTINCT * from (
+		select DISTINCT rownum rnum, data.* from (
+		select DISTINCT substr(m_addr, 0, instr(m_addr,' ',1,2)) m_addr FROM MANSION where substr(m_addr, 0, instr(m_addr,' ',1,2)) like '%' || #{userKeyword}  || '%' ORDER BY m_addr ) data )
+		where rnum>=1 and rnum <=7
+	]]>	
+	</select>
+	
+	<select id="hitImage" resultType="com.exe.tmi.main.dto.MainDTO">
+	<![CDATA[
+		select rownum, data.* from(
+		select DISTINCT A.r_num, A.r_mainimage,B.m_addr, C.hitCount, D.cate_name from mansion B,roomimage A, room C, category D 
+		where A.r_num = C.r_num and B.m_num=C.m_num and D.cate_num=B.cate_num order by hitcount desc ) data
+		where rownum>=1 and rowNum<=5
+	]]>		
+	</select>
+	
+	<select id="kakaoLogin" parameterType="String" resultType="guestDTO">
+		select * from guest where email = #{email}
+	</select>
+	
+	<update id="updateprofile" parameterType="guestDTO">
+		update guest set pwd = #{pwd}, name = #{name}, profileimage = #{profileimage} where email = #{email}
+	</update>
+	
+	<select id="hostCheck" resultType="String" parameterType="String">
+		select hostCheck from guest where email = #{email}
+	</select>
+	
+	<select parameterType="String" id="getListReviews" resultType="postCommentDTO">
+		select guest.profileimage, post.p_num, room.r_name, guest.name, post.p_grade, post.p_content, post.p_imagename, to_char(post.p_created, 'YYYY-MM-DD') p_created 
+		from mansion, guest, post, room where (mansion.email = #{email} and mansion.m_num = room.m_num and 
+		room.r_num = post.r_num and guest.email = post.email) order by post.p_num desc 
+	</select>
+	
+	<select id="getCoupons" parameterType="String" resultType="String">
+		select coupon from guest where email = #{email}
+	</select>
+	
+	
+	<select id="getWishLists" parameterType="String" resultType="String">
+		select wishlist from guest where email = #{email}
+	</select>
+	
+	<select id="getRoom" parameterType="int" resultType="roomListDTO">
+		select distinct room.r_num r_num, room.r_name, room.r_grade, room.hitcount, roomimage.r_mainimage, mansion.m_addr from room, mansion, roomimage 
+		where roomimage.r_num=room.r_num and room.r_num = #{r_num} and room.m_num = mansion.m_num
+	</select>
+	
+	<update id="updateWishList" parameterType="java.util.Map">
+		update guest set wishlist = #{wishlist} where email = #{email}
+	</update>
+	
+	<!--  관리자 -->
+	<!--  유저 수 -->
+	<select id="userCount" resultType="int">
+		select count(*) count from guest
+	</select>
+	<!--  호스트 수 -->
+	<select id="hostCount" resultType="int">
+		select count(*) count from guest
+		where hostcheck=1
+	</select>
+	
+	<!-- 인기있는 숙소 가져오는 sql -->
+	<select id="popularRoom" resultType="popularDTO">
+	<![CDATA[
+		select rownum, data.* from(
+		select DISTINCT A.r_num, A.r_mainimage, c.r_name, e.email ,C.hitCount, D.cate_name, c.r_grade
+		from roomimage A, mansion B, room C, category D, guest e 
+		where A.r_num = C.r_num 
+		and B.m_num=C.m_num 
+		and D.cate_num=B.cate_num
+		and b.email = e.EMAIL
+		order by hitCount desc) data
+		where rownum>=1 and rowNum<=5
+	]]>		
+	</select>
+	
+	<!-- reservationList.jsp -->
+	<select id="getReservationList" parameterType="String" resultType="ReservationListDTO">
+		select distinct A.b_num,A.r_num,A.email,to_char(A.checkin,'YYYY-MM-DD') checkin, to_char(A.checkout,'YYYY-MM-DD') checkout,A.b_inwon,A.b_price,A.bookcheck,B.r_name,C.r_mainimage,D.name from 
+		book A,(SELECT A.r_num,A.r_name,A.admincheck from room A,
+		(select m_num from mansion where email=#{email}) B where A.m_num=B.m_num) B,
+		roomimage C,guest D
+		where A.r_num=B.r_num
+		and C.r_num=A.r_num
+		and A.email=D.email
+		and A.checkout>sysdate
+		and A.bookcheck=0
+		and B.admincheck=1
+		order by checkin asc,checkout desc
+	</select>
+	
+	<update id="setReservationUpdate" parameterType="ReservationListDTO">
+		update book set bookcheck=1 where email=#{email} and r_num=#{r_num} and checkin=(to_date(#{checkin},'YYYY-MM-DD HH24:MI:SS')) and checkout=(to_date(#{checkout},'YYYY-MM-DD HH24:MI:SS'))
+	</update>
+	
+	<select id="getReservationList_A" parameterType="String" resultType="ReservationListDTO">
+		select distinct A.b_num,A.r_num,A.email,to_char(A.checkin,'YYYY-MM-DD') checkin, to_char(A.checkout,'YYYY-MM-DD') checkout,A.b_inwon,A.b_price,A.bookcheck,B.r_name,C.r_mainimage,D.name from 
+		book A,(SELECT A.r_num,A.r_name,A.admincheck from room A,
+		(select m_num from mansion where email=#{email}) B where A.m_num=B.m_num) B,
+		roomimage C,guest D
+		where A.r_num=B.r_num
+		and C.r_num=A.r_num
+		and A.email=D.email
+		and A.checkout>sysdate
+		and A.bookcheck=1
+		and B.admincheck=1
+		order by checkin asc,checkout desc
+	</select>
+	
+	<delete id="reservationDelete" parameterType="int">
+		delete book where b_num=#{b_num}
+	</delete>
+	
+	<select id="reservationSMS" parameterType="int" resultType="ReservationListDTO">
+		select A.tel, B.email, A.name, C.M_name, D.r_name, to_char(B.checkin,'YYYY-MM-DD') checkin, to_char(B.checkout,'YYYY-MM-DD') checkout
+		from guest A, book B, mansion C, room D
+		where B.b_num=#{b_num} and A.email=B.email and B.r_num=D.r_num and D.m_num=C.m_num
+	</select>
+	
+	<delete id="deleteGuest" parameterType="String">
+		delete guest where email = #{email}
+	</delete>
+	
+	<!-- 수락시 포인트 적립하기 위해서 조회 -->
+	<select id="logusedPoint" parameterType="int" resultType="ReservationListDTO">
+		select A.email,A.usepoint,A.addpoint,B.point from logused A,guest B where A.b_num=#{b_num} and A.email=B.email
+	</select>
+	
+	<!-- 수락시 포인트 적립 -->
+	<update id="logusedPointUpdate" parameterType="ReservationListDTO">
+		update guest set point=#{point} where email=#{email}
+	</update>
+	
+	<!-- b_num 번호의 포인트 삭제 -->
+	<delete id="logusedDelete" parameterType="int">
+		delete logused where b_num=#{b_num}
+	</delete>
+	
+	<select id="selectEmail" parameterType="int" resultType="String">
+		select A.email from mansion A, room B where A.m_num=B.m_num and B.r_num=#{r_num}		
+	</select>
+
+</mapper>

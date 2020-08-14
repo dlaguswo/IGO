@@ -1,0 +1,82 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+	PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+	"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+	
+<mapper namespace="mapper.mansion">
+
+<select id="getMaxNum" resultType="int">
+	select nvl(max(m_num),0) from mansion
+</select>
+
+<insert id="insertData" parameterType="mansionDTO">
+	insert into mansion (m_num,cate_num,m_name,m_addr,m_tel,email) values (#{m_num},#{cate_num},#{m_name},#{m_addr},#{m_tel},#{email})
+</insert>
+
+<select id="getMansion" resultType="mansionDTO">
+	select A.*, B.cate_name from mansion A, category B where A.cate_num = B.cate_num and A.m_num = #{m_num}
+</select>
+
+<select id="getRoomList" resultType="roomListDTO" parameterType="hashMap">
+<![CDATA[
+	select distinct A.r_num,A.r_name,A.r_grade,A.hitcount,NVL(E.reviewCount,0) p_count,B.m_name,B.m_addr,B.m_tel,B.email,B.cate_num,C.r_mainimage,C.r_subimage,G.cate_name
+	from room A,mansion B,roomimage C,book D, (select r_num,count(*) reviewCount from post group by r_num order by r_num) E,
+	roomsub F,category G
+	where A.r_num not in (select r_num from book where (#{startDate}<=d.checkin and #{endDate}<=d.checkin) or (#{startDate}>=d.checkout and #{endDate}>=d.checkout) or (#{startDate} >=d.checkin and #{endDate}<=d.checkout))
+	and (A.m_num=B.m_num and B.m_addr like '%' || #{searchValue1} || '%')
+	and A.r_num=C.r_num
+	and A.r_inwon >= #{inwon}
+	and A.r_num = E.r_num(+)
+	and A.r_num = F.r_num
+	and F.f_num like '%' || #{check} || '%'
+	and A.r_grade like '%' || #{check1} || '%'
+	and F.s_num like '%' || #{check2} ||'%'
+	and (A.r_price>=#{minPrice} and A.r_price<=#{maxPrice})
+	and B.cate_num = G.cate_num
+	and A.admincheck=1
+	order by A.r_num
+]]>
+</select>
+
+<select id="reGetRoomList" resultType="roomListDTO" parameterType="hashMap">
+<![CDATA[
+	select distinct A.r_num,A.r_name,A.r_grade,A.hitcount,NVL(E.reviewCount,0) p_count,B.m_name,B.m_addr,B.m_tel,B.email,B.cate_num,C.r_mainimage,C.r_subimage,G.cate_name
+	from room A,mansion B,roomimage C,book D, (select r_num,count(*) reviewCount from post group by r_num order by r_num) E,
+	roomsub F,category G
+	where A.r_num not in (select r_num from book where (#{startDate}<=d.checkin and #{endDate}<=d.checkin) or (#{startDate}>=d.checkout and #{endDate}>=d.checkout) or (#{startDate} >=d.checkin and #{endDate}<=d.checkout))
+	and (A.m_num=B.m_num and B.m_addr like '%' || #{searchValue1} || '%' and B.cate_num=#{searchValue2 } )
+	and A.r_num=C.r_num
+	and A.r_inwon >= #{inwon}
+	and A.r_num = E.r_num(+)
+	and A.r_num = F.r_num
+	and F.f_num like '%' || #{check} || '%'
+	and A.r_grade like '%' || #{check1} || '%'
+	and F.s_num like '%' || #{check2} ||'%'
+	and (A.r_price>=#{minPrice} and A.r_price<=#{maxPrice})
+	and B.cate_num = G.cate_num
+	and A.admincheck=1
+	order by A.r_num
+]]>
+</select>
+
+<select id="getReadWish" resultType="String" parameterType="String">
+	select wishlist from guest where email=#{email}
+</select> 
+
+<update id="updateWish" parameterType="hashMap">
+	update guest set wishlist =#{wishlist} where email=#{email}
+</update>
+
+<select id="getHostInfo" parameterType="String" resultType="guestDTO">
+	select * from guest where email=#{email}
+</select>
+
+<select id="getMnum" parameterType="int" resultType="int">
+	select A.m_num from mansion A, room B where A.m_num = B.m_num and B.r_num = #{r_num} 
+</select>
+
+<update id="updateData" parameterType="mansionDTO">
+	update mansion set cate_num =#{cate_num}, m_name=#{m_name} ,m_addr=#{m_addr}, m_tel = #{m_tel} where m_num = #{m_num }
+</update>
+
+</mapper>

@@ -1,0 +1,51 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+	PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+	"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+	
+<mapper namespace="mapper.post">
+
+	<select id="commentList" parameterType="int" resultType="postCommentDTO">	
+		select guest.email, p_num, guest.name, post.p_grade, post.p_content, post.p_imagename, guest.profileimage profileimage, to_char(post.p_created, 'YYYY-MM-DD') p_created from post, guest where (post.r_num = #{r_num} and (guest.email = post.email)) order by post.p_num desc
+	</select>
+	
+	<select id="commentCount" resultType="int" parameterType="int">
+		select nvl(count(*),0) from post where post.r_num = #{r_num}
+	</select>
+	
+	<select id = "commentmaxNum" resultType="int">
+		select nvl(max(p_num), 0) from post
+	</select>
+	
+	<insert id="commentInsert" parameterType="postDTO">
+      insert into post (p_num, r_num, email, p_grade, p_content, p_imagename, p_created) values (#{p_num}, #{r_num}, #{email}, #{p_grade}, #{p_content}, #{p_imagename} ,sysdate)
+   	</insert>
+	
+	<update id="commentUpdate" parameterType="postDTO">
+		update post set 
+		r_num=#{r_num},email=#{email},p_grade=#{p_grade},p_content=#{p_content},p_imagename=#{p_imagename}
+		where p_num=#{p_num}
+	</update>
+	
+	<delete id="commentDelete"  parameterType="int">
+		delete post where p_num=#{p_num}
+	</delete>
+	
+	<select id = "getReadData" parameterType="int" resultType="String">
+		select email from post where p_num = #{p_num}
+	</select>
+	
+	<select id="getComment" parameterType="String" resultType="postDTO">
+		select DISTINCT a.email,a.p_num,a.r_num,a.p_grade,a.p_content,a.p_imagename,a.p_created,b.r_name,c.r_mainimage from post a,room b,roomimage c
+		where a.r_num=b.r_num and a.r_num=c.r_num and a.email=#{email}
+	</select>
+	
+	<select id="postCommentCount" parameterType="String" resultType="int">
+		select nvl(count(email),0) from post where email = #{email}
+	</select>
+	
+	<select id = "totalpostCount" resultType="int">
+		select count(*) count from post
+	</select>
+	
+</mapper>

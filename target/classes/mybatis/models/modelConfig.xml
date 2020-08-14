@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE configuration 	PUBLIC "-//mybatis.org//DTD Config 3.0//EN"
+	"http://mybatis.org/dtd/mybatis-3-config.dtd">
+
+<configuration>
+  <typeAliases>
+    <typeAlias type="com.exe.tmi.book.dto.BookDTO" alias="bookDTO" />
+    <typeAlias type="com.exe.tmi.book.dto.BookingDTO" alias="bookingDTO" />   
+    <typeAlias type="com.exe.tmi.book.dto.PointDTO" alias="pointDTO" />    
+    <typeAlias type="com.exe.tmi.guest.dto.GuestDTO" alias="guestDTO" />
+    <typeAlias type="com.exe.tmi.mansion.dto.MansionDTO" alias="mansionDTO" />
+    <typeAlias type="com.exe.tmi.post.dto.PostDTO" alias="postDTO" />
+    <typeAlias type="com.exe.tmi.post.dto.PostCommentDTO" alias="postCommentDTO" />
+    <typeAlias type="com.exe.tmi.room.dto.RoomDTO" alias="roomDTO" />    
+    <typeAlias type="com.exe.tmi.mansion.dto.RoomListDTO" alias="roomListDTO" />
+    <typeAlias type="com.exe.tmi.room.dto.HostDTO" alias="hostDTO" />
+    <typeAlias type="com.exe.tmi.main.dto.PopularDTO" alias="popularDTO" />
+    <typeAlias type="com.exe.tmi.main.dto.MonthsChartDTO" alias="monthsChartDTO" />
+    <typeAlias type="com.exe.tmi.guest.dto.ReservationListDTO" alias="ReservationListDTO" />
+  </typeAliases>
+</configuration>
+
+
+

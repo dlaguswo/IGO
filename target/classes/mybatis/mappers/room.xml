@@ -1,0 +1,147 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+	PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+	"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+	
+<mapper namespace="mapper.room">
+
+<select id="getMaxNum" resultType="int">
+	select nvl(max(r_num),0) from room
+</select>
+
+<insert id="insertData" parameterType="roomDTO">
+	insert into room (r_num,m_num,r_name,r_content,r_inwon,r_bath,r_bed,r_bedroom,r_price,r_grade,hitcount,admincheck) values (#{r_num},#{m_num},#{r_name},#{r_content},#{r_inwon},#{r_bath},#{r_bed},#{r_bedroom},#{r_price},0,0,0)
+</insert>
+
+<insert id="insertDetailData" parameterType="roomDTO">
+	insert into roomsub(r_num,f_num,s_num) values (#{r_num},#{f_num},#{s_num})
+</insert>
+
+<insert id="insertImageData" parameterType="roomDTO">
+	insert into roomimage(r_num,r_mainimage,r_subimage) values (#{r_num},#{r_mainimage},#{r_subimage})
+</insert>
+
+<update id="updateHitCount" parameterType="int">
+	update room set hitcount=hitcount+1 where r_num=#{r_num}
+</update>
+
+<select id="getRoom" parameterType="int" resultType="roomDTO">
+	select distinct A.*, B.*, C.*, D.m_name
+	from room A, roomimage B, (select count(*) reviewcount from post where r_num = #{r_num}) C, mansion D
+	where A.r_num = B.r_num
+	and A.m_num = D.m_num
+	and A.r_num = #{r_num}
+</select>
+
+<select id="getOtherRoom" parameterType="hashMap" resultType="roomDTO">
+	select distinct A.*,B.r_mainimage
+	from room A, roomimage B
+	where A.r_num = B.r_num
+	and A.m_num = #{m_num}
+	and A.r_num != #{r_num}
+</select>
+
+<select id="getNearRoom" parameterType="hashMap" resultType="roomDTO">
+	select distinct A.r_num,A.r_name,A.r_grade,A.r_price,B.m_addr,C.r_mainimage
+	from room A, mansion B, roomimage C
+	where A.m_num = B.m_num
+	and A.r_num = C.r_num
+	and B.m_num != #{m_num}
+	and B.m_addr like '%' || #{addr} || '%'
+</select>
+
+<select id="hostData" parameterType="String" resultType="hostDTO">
+   select distinct a.*,b.hitcount,b.r_name,b.r_num,c.r_mainimage,d.cate_name from mansion a, room b,roomimage c, category d where a.m_num=b.m_num and b.r_num = c.r_num and d.cate_num=a.cate_num and a.email = #{email}
+</select>
+
+<select id="faciltyorroomsub" parameterType="int" resultType="roomDTO">
+	select A.f_num,A.s_num from roomsub A, room B where A.r_num=b.r_num and A.r_num = #{r_num}
+</select>
+
+<select id="hostUpdateData" parameterType="String" resultType="hostDTO">
+	select a.email,a.cate_num,a.m_name,a.m_addr,a.m_tel,b.m_num,b.r_num,b.r_name,b.r_content,b.r_inwon,b.r_bath,b.r_bed,b.r_bedroom,b.r_price,c.f_num,c.s_num from room b, mansion a, roomsub c 
+	where a.m_num = b.m_num and b.r_num=c.r_num and b.r_num = #{r_num}
+</select>
+
+<update id="updateData" parameterType="roomDTO">
+	update room set r_name = #{r_name}, r_content = #{r_content}, r_inwon = #{r_inwon}, r_bath = #{r_bath}, r_bed = #{r_bed}, r_bedroom = #{r_bedroom},
+	 r_price = #{r_price } where r_num = #{r_num}
+</update>
+
+<select id="getMainImage" parameterType="int" resultType="String">
+	select r_mainimage from roomimage where r_num = #{r_num}
+</select>
+
+<select id="getSubImage" parameterType="int" resultType="String">
+	select r_subimage from roomimage where r_num = #{r_num}
+</select>
+
+<update id="updateImageData" parameterType="roomDTO">
+	update roomimage set r_mainimage = #{r_mainimage }, r_subimage = #{r_subimage } where r_num = #{r_num }
+</update>
+
+<update id="updateArrayData" parameterType="roomDTO">
+	update roomsub set f_num = #{f_num}, s_num=#{s_num} where r_num=#{r_num}
+</update>
+
+<select id="getRoomCount" resultType="int" parameterType="String">
+	select nvl(count(*),0) from (select A.*, B.* from room A, mansion B where A.m_num=B.m_num and email=#{email})
+</select>
+
+<!-- 어드민 체크 번호가 0인것 모두 가져오기 -->
+<select id="hostAllData" resultType="hostDTO">
+	select a.*, b.r_name, c.cate_name, d.r_mainimage, d.r_num
+	from mansion a, room b, category c, roomimage d
+	where a.m_num = b.m_num
+	and a.cate_num = c.cate_num
+	and d.r_num = b.r_num
+	and admincheck = 0
+</select>
+
+<select id="getCate_name" parameterType="int" resultType="String">
+	select cate_name from category where cate_num=#{cate_num}
+</select>
+
+<update id="agreeHost" parameterType="int">
+	update room set admincheck = 1 where r_num = #{r_num}
+</update>
+
+<update id="hostCheck" parameterType="String">
+	update guest set hostcheck=1 where email=#{email}
+</update>
+
+<delete id="disAgreeHost" parameterType="int">
+	delete mansion where m_num = (select B.m_num from room A, mansion B where A.m_num=B.m_num and A.r_num = #{r_num})
+</delete>
+
+<delete id="deleteRoomImage" parameterType="int">
+	delete roomimage where r_num = #{r_num}
+</delete>
+
+<select id="checkCount" parameterType="String" resultType="int">
+	select nvl(count(*),0) from mansion where email =#{email}
+</select>
+
+<update id="updateHost" parameterType="String">
+	update guest set hostcheck = 0 where email=#{email}
+</update>
+
+<select id="booking" parameterType="int" resultType="bookDTO">
+	select A.*, B.m_name, B.m_addr, B.m_tel from room A, mansion B where A.m_num = B.m_num and A.r_num = #{r_num } 
+</select>
+
+<select id="deleteRoomGetData" resultType="roomDTO">
+	select b.cate_name, a.r_name,a.r_num , a.r_grade, a.hitcount, c.m_addr, d.r_mainimage 
+	from room a, category b, mansion c, roomimage d
+	where a.r_num=d.r_num and a.m_num = c.m_num and b.cate_num =c.cate_num
+</select>
+
+<delete id="deleteRoomData" parameterType="int">
+	delete room where r_num = #{r_num}
+</delete>
+
+<delete id="deleteRoomSubData" parameterType="int">
+	delete roomsub where r_num = #{r_num}
+</delete>
+	
+</mapper>
